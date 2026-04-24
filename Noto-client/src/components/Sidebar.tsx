@@ -1,6 +1,6 @@
 import { Menu } from "lucide-react"
 import {Sheet,SheetContent,SheetTrigger} from "@/components/ui/sheet"
-import { LuLayoutGrid,LuBrain } from "react-icons/lu";
+import { LuLayoutGrid } from "react-icons/lu";
 import { FaYoutube,FaTwitter,FaUser } from "react-icons/fa";
 import { IoIosLogOut } from "react-icons/io";
 import { useNavigate } from "react-router-dom"

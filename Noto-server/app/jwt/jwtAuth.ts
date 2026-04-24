@@ -26,6 +26,7 @@ export const jwtAuth = (req: Request, res: Response, next: NextFunction): void =
             return;
         }
 
+        // Some clients store token with quotes; normalize before verify.
         token = token.trim().replace(/^"|"$/g, "");
 
         const secret = process.env.JWT_SECRET_KEY;
@@ -45,16 +46,3 @@ export const jwtAuth = (req: Request, res: Response, next: NextFunction): void =
         return; 
     }
 };
-// export const jwtAuth=(req:Request,res:Response,next:NextFunction)=>{
-//     try {
-//         const decoded =jwt.verify(req.headers.token as string,process.env.JWT_SECRET_KEY as string) as {id:string};
-//         if(decoded.id){
-//             req.id=decoded.id
-//             next()
-//         }else{
-//             res.status(401).send("Authorization Error")
-//         }
-//     } catch(err) {
-//         res.status(500).send("Authorization Error")
-//     }
-// }
