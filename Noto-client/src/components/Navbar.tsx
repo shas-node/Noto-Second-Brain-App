@@ -11,6 +11,7 @@ import { useRecoilState } from "recoil"
 import axios from "axios"
 import { FaCheck } from "react-icons/fa6";
 import { Switch } from "./ui/switch";
+import { resolveToken } from "@/lib/utils";
 const API_BASE = import.meta.env.VITE_API_BASE;
 
 const Navbar = () => {
@@ -20,35 +21,43 @@ const Navbar = () => {
   const [copied, setCopied] = useState(false)
   const [sharedLink, setSharedLink] = useState('')
   const [sharable, setSharable] = useState(false)
-  const token=localStorage.getItem('token')
+  const token = resolveToken(localStorage.getItem('token'))
   useEffect(() => {
-    axios.get(`${API_BASE}/shareon`,{headers:{token:JSON.parse(token as string)}})
-    .then((res)=>{
-      setSharable(res.data.isSharing)
-      setSharedLink(`${window.location.origin}/share/`+res.data.slug)
+    if (!token) return;
+    axios.get(`${API_BASE}/share/shareon`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     })
+      .then((res) => {
+        setSharable(res.data.isSharing)
+        setSharedLink(`${window.location.origin}/share/` + res.data.slug)
+      })
+      .catch((res) => console.log(res));
   }, [])
   
   if(!token){
     return
   }
-  const submithandler=()=>{
+  const submithandler = async () => {
     if(tagValue){
       const newtags=[...tags,tagValue.trim()]
       setTags(newtags)
       setInputValue({...inputValue,tags:newtags})
       setTagValue("")
     }
-    axios.post(`${API_BASE}/content`,{...inputValue},{headers:
-      {
-        Authorization: `Bearer ${JSON.parse(token)}`
-      }
-      })
-    .then()
-    .catch((res)=>console.log(res))  
-    setInputValue({title:"",link:"",tags:[]})
-    setTags([])
-    window.location.reload(); 
+    try {
+      await axios.post(`${API_BASE}/content`, { ...inputValue }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setInputValue({ title: "", link: "", tags: [] });
+      setTags([]);
+      window.location.reload();
+    } catch (res) {
+      console.log(res);
+    }
   }
   const handleTags=(e: React.KeyboardEvent<HTMLInputElement>)=>{
     if(e.key==="Enter"){
@@ -74,14 +83,22 @@ const Navbar = () => {
   }
   const checkedChangedHandler=()=>{
     if(!sharable){
-      axios.post(`${API_BASE}/shareon`,{},{headers:{token:JSON.parse(token)}})
+      axios.post(`${API_BASE}/share/shareon`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       .then((res)=>{
         setSharedLink(`${window.location.origin}/share/`+res.data.slug)
         setSharable(res.data.isSharing)
       })
       .catch((res)=>console.log(res));
     }else{
-        axios.post(`${API_BASE}/shareoff`,{},{headers:{token:JSON.parse(token)}})
+        axios.post(`${API_BASE}/share/shareoff`, {}, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
         .then((res)=>{
           setSharedLink("")
           setSharable(res.data.isSharing)

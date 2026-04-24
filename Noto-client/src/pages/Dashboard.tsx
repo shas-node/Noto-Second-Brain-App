@@ -11,6 +11,7 @@ import { useRecoilState } from "recoil";
 import { inputValueState, tagsState } from "@/store/atoms";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { resolveToken } from "@/lib/utils";
 const API_BASE = import.meta.env.VITE_API_BASE;
 
 interface dataInterface {
@@ -21,7 +22,7 @@ interface dataInterface {
   createdAt: string,
 }
 const Dashboard = () => {
-  const token = localStorage.getItem('token')
+  const token = resolveToken(localStorage.getItem('token'))
   const navigate = useNavigate()
   const [data, setData] = useState<dataInterface[]>([])
   const [copied, setCopied] = useState(false)
@@ -42,7 +43,7 @@ const Dashboard = () => {
       return;
     }
     axios.delete(`${API_BASE}/content/${id}`, { headers: {
-  Authorization: `Bearer ${JSON.parse(token)}`
+  Authorization: `Bearer ${token}`
 } })
       .then((res) => {
         console.log(res)
@@ -56,7 +57,7 @@ const Dashboard = () => {
       return;
     }
     axios.get(`${API_BASE}/content/${id}`, { headers: {
-  Authorization: `Bearer ${JSON.parse(token)}`
+  Authorization: `Bearer ${token}`
 } })
       .then((res) => {
         setInputValue({title:res.data.content.title,link:res.data.content.link,tags:[...res.data.content.tags]})
@@ -70,7 +71,7 @@ const Dashboard = () => {
       return;
     }
     axios.get(`${API_BASE}/content`, { headers: {
-  Authorization: `Bearer ${JSON.parse(token)}`
+  Authorization: `Bearer ${token}`
 } })
       .then((res) => {
         setData([...res.data.contents])
@@ -84,21 +85,25 @@ const Dashboard = () => {
   if (!token) {
     return
   }
-  const submithandler = (id: string) => {
+  const submithandler = async (id: string) => {
     if (tagValue) {
       const newtags = [...tags, tagValue.trim()]
       setTags(newtags)
       setInputValue({ ...inputValue, tags: newtags })
       setTagValue("")
     }
-    axios.put(`${API_BASE}/content/${id}`, { ...inputValue }, { headers: {
-  Authorization: `Bearer ${JSON.parse(token)}`
-} })
-      .then((res) => console.log(res))
-      .catch((res) => console.log(res))
-    setInputValue({ title: "", link: "", tags: [] })
-    setTags([])
-    window.location.reload();
+    try {
+      await axios.put(`${API_BASE}/content/${id}`, { ...inputValue }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setInputValue({ title: "", link: "", tags: [] });
+      setTags([]);
+      window.location.reload();
+    } catch (res) {
+      console.log(res);
+    }
   }
   const handleTags = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -147,7 +152,7 @@ const Dashboard = () => {
 }
           const nlink = convertToEmbedUrl(e.link)
           return (
-            <Card className=" md:w-72 w-full h-[480px] overflow-auto gap-4" key={e._id}>
+            <Card className="md:w-96 w-full h-[480px] overflow-auto m-3" key={e._id}>
               <CardHeader>
                 <CardTitle className="flex justify-around items-center">
                   <div className="flex">

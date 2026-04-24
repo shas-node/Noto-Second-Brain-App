@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import toast, { Toaster } from "react-hot-toast"
+import { resolveToken } from "@/lib/utils";
 const formSchema = z.object({
     oldPassword: z
         .string()
@@ -45,7 +46,7 @@ const formSchema = z.object({
         path: ["ConfirmPassword"],
     });
 const Profile = () => {
-    const token = localStorage.getItem('token')
+    const token = resolveToken(localStorage.getItem('token'))
     const navigate = useNavigate()
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -61,7 +62,7 @@ const Profile = () => {
             return;
         }
         axios.put(`${API_BASE}/changePassword`, { ...values }, { headers: {
-  Authorization: `Bearer ${JSON.parse(token)}`
+  Authorization: `Bearer ${token}`
 } })
             .then(() => toast.success('Password Changed Successfully'))
             .catch(() => toast.error('Wrong User Password'))
@@ -74,7 +75,7 @@ const Profile = () => {
             return;
         }
         axios.get(`${API_BASE}/user`, { headers: {
-  Authorization: `Bearer ${JSON.parse(token)}`
+  Authorization: `Bearer ${token}`
 } })
             .then((e) => { setUser(e.data) })
             .catch((res) => console.log(res))

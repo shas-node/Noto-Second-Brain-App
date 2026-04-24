@@ -31,7 +31,7 @@ const SharedPage = ()=> {
   const [copyId, setCopyId] = useState("")
   const {id} = useParams()
   useEffect(() => {
-    axios.get(`${API_BASE}/share/${id}`)
+    axios.get(`${API_BASE}/share/share/${id}`)
     .then((res)=>{
       setData([...res.data])
     })

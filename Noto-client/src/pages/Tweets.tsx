@@ -10,6 +10,7 @@ import { useRecoilState } from "recoil";
 import { inputValueState, tagsState } from "@/store/atoms";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { resolveToken } from "@/lib/utils";
 const API_BASE = import.meta.env.VITE_API_BASE;
 
 interface dataInterface {
@@ -27,7 +28,7 @@ interface dataInterface {
 
 
 const Tweets = () => {
-  const token = localStorage.getItem('token')
+  const token = resolveToken(localStorage.getItem('token'))
   const navigate = useNavigate()
   const [data, setData] = useState<dataInterface[]>([])
   const [copied, setCopied] = useState(false)
@@ -55,23 +56,27 @@ useEffect(() => {
     }, 2000);
     setCopied(true)
   }
-  const deleteContent = (id: string) => {
+  const deleteContent = async (id: string) => {
     if (!token) {
       return;
     }
-    axios.delete(`${API_BASE}/content/${id}`, { headers: {
-  Authorization: `Bearer ${JSON.parse(token)}`
-}  })
-      .then((res) => console.log(res))
-      .catch((res) => console.log(res))
-    window.location.reload();
+    try {
+      await axios.delete(`${API_BASE}/content/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      window.location.reload();
+    } catch (res) {
+      console.log(res);
+    }
   }
   const editValuesHandler = (id: string) => {
     if (!token) {
       return;
     }
     axios.get(`${API_BASE}/content/${id}`, { headers: {
-  Authorization: `Bearer ${JSON.parse(token)}`
+  Authorization: `Bearer ${token}`
 }  })
       .then((res) => {
         setInputValue({ title: res.data.content.title, link: res.data.content.link, tags: [...res.data.content.tags] })
@@ -85,7 +90,7 @@ useEffect(() => {
       return;
     }
     axios.get(`${API_BASE}/content`, { headers: {
-  Authorization: `Bearer ${JSON.parse(token)}`
+  Authorization: `Bearer ${token}`
 } })
       .then((res) => {
         setData([...res.data.contents])
@@ -99,21 +104,25 @@ useEffect(() => {
   if (!token) {
     return
   }
-  const submithandler = (id: string) => {
+  const submithandler = async (id: string) => {
     if (tagValue) {
       const newtags = [...tags, tagValue.trim()]
       setTags(newtags)
       setInputValue({ ...inputValue, tags: newtags })
       setTagValue("")
     }
-    axios.put(`${API_BASE}/content/${id}`, { ...inputValue }, { headers: {
-  Authorization: `Bearer ${JSON.parse(token)}`
-}  })
-      .then((res) => console.log(res))
-      .catch((res) => console.log(res))
-    setInputValue({ title: "", link: "", tags: [] })
-    setTags([])
-    window.location.reload();
+    try {
+      await axios.put(`${API_BASE}/content/${id}`, { ...inputValue }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setInputValue({ title: "", link: "", tags: [] });
+      setTags([]);
+      window.location.reload();
+    } catch (res) {
+      console.log(res);
+    }
   }
   const handleTags = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
